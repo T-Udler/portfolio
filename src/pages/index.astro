@@ -18,19 +18,46 @@ const projects = allProjects.sort((a, b) => {
   <Header />
 
   <main id="top">
-    <section class="hero wrap">
-      <p class="eyebrow">Portfolio</p>
-      <h1>{profile.name}</h1>
-      <p class="role">{profile.role}</p>
-      <p class="bio">{profile.bio}</p>
-      <div class="cta">
-        <a class="button" href="#proyectos">Ver proyectos</a>
-        <a class="button ghost" href="#contacto">Contacto</a>
+    <section class="hero">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+
+      <div class="wrap hero-inner">
+        <div class="badge reveal-fade-up">
+          <span class="dot"></span>
+          Disponible para colaboraciones freelance
+        </div>
+
+        <p class="pre-headline reveal-fade-up">Realizador audiovisual — contenido generado con IA</p>
+
+        <h1 class="headline reveal-scale">Tomás Udler</h1>
+
+        <p class="sub-headline reveal-fade">{profile.bio}</p>
+
+        <div class="cta-row reveal-fade-up-delayed">
+          <a class="btn-primary" href="#proyectos">
+            <span>Ver proyectos</span>
+            <span class="btn-primary-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </a>
+          <a class="btn-secondary group" href="#contacto">
+            Contacto
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
       </div>
     </section>
 
     <section id="proyectos" class="section wrap">
-      <h2>Proyectos</h2>
+      <div class="section-head">
+        <h2>Proyectos</h2>
+        <span class="count">{projects.length} trabajos — publicidad, trailers &amp; VFX</span>
+      </div>
       <div class="grid">
         {
           projects.map((project) => (
@@ -46,13 +73,12 @@ const projects = allProjects.sort((a, b) => {
     </section>
 
     <section id="contacto" class="section wrap contact">
-      <h2>Contacto</h2>
-      <p class="bio">¿Tenés un proyecto en mente? Escribime.</p>
+      <span class="eyebrow">¿Trabajamos juntos?</span>
+      <a class="contact-email" href={`mailto:${profile.email}`}>{profile.email}</a>
       <div class="contact-links">
-        <a class="button" href={`mailto:${profile.email}`}>{profile.email}</a>
-        {profile.phone && <a class="button ghost" href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>}
+        {profile.phone && <a href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>}
         {profile.social.linkedin && (
-          <a class="button ghost" href={profile.social.linkedin} target="_blank" rel="noopener noreferrer">
+          <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer">
             LinkedIn ↗
           </a>
         )}
@@ -60,94 +86,263 @@ const projects = allProjects.sort((a, b) => {
     </section>
 
     <footer class="footer wrap">
-      <p>© {new Date().getFullYear()} {profile.name}</p>
+      <span>© {new Date().getFullYear()} {profile.name}</span>
+      <span>{profile.location}</span>
     </footer>
   </main>
 </Layout>
 
 <style>
   .hero {
-    padding: 96px 24px 64px;
-  }
-
-  .eyebrow {
-    margin: 0 0 8px;
-    color: var(--accent);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: clamp(2.2rem, 5vw, 3.4rem);
-    letter-spacing: -0.02em;
-  }
-
-  .role {
-    margin: 10px 0 0;
-    font-size: 1.15rem;
-    color: var(--text-muted);
-  }
-
-  .bio {
-    max-width: 640px;
-    color: var(--text-muted);
-    margin: 20px 0 0;
-  }
-
-  .cta {
+    position: relative;
+    min-height: 100vh;
     display: flex;
-    gap: 12px;
-    margin-top: 32px;
-    flex-wrap: wrap;
+    align-items: center;
+    overflow: hidden;
+    background: #000;
   }
 
-  .button {
-    display: inline-block;
-    padding: 12px 20px;
-    border-radius: 999px;
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .blob-a {
+    top: -20%;
+    left: 20%;
+    width: 600px;
+    height: 600px;
+    background: rgba(30, 58, 138, 0.2);
+  }
+
+  .blob-b {
+    bottom: -10%;
+    right: 20%;
+    width: 500px;
+    height: 500px;
+    background: rgba(49, 46, 129, 0.2);
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 28px;
+    padding-top: 80px;
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     background: var(--accent);
-    color: #0e0f12;
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.92rem;
+    display: inline-block;
   }
 
-  .button.ghost {
-    background: transparent;
+  .pre-headline {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    line-height: 1.1;
+    color: #fff;
+  }
+
+  .headline {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: clamp(3.5rem, 12vw, 8.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    background: linear-gradient(to bottom, #fff, #fff 60%, var(--gradient-end));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .sub-headline {
+    margin: 0;
+    max-width: 560px;
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+    line-height: 1.65;
     color: var(--text);
-    border: 1px solid var(--border);
+    opacity: 0.7;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  @media (min-width: 640px) {
+    .cta-row {
+      flex-direction: row;
+    }
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 8px 8px 24px;
+    text-decoration: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    transform: scale(1.03);
+  }
+
+  .btn-primary span:first-child {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: #0a0400;
+  }
+
+  .btn-primary-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+
+  .btn-primary:hover .btn-primary-icon {
+    background: var(--accent-hover);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .btn-secondary:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .btn-secondary .arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .btn-secondary:hover .arrow {
+    transform: translateX(4px);
   }
 
   .section {
-    padding: 48px 24px;
+    padding: 96px 24px;
     border-top: 1px solid var(--border);
   }
 
-  .section h2 {
-    margin: 0 0 28px;
-    font-size: 1.6rem;
-    letter-spacing: -0.01em;
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 2.4rem;
+  }
+
+  .count {
+    font-size: 0.85rem;
+    color: var(--text-faint);
   }
 
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 28px 24px;
+  }
+
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-bottom: 120px;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+
+  .contact-email {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: #fff;
+    text-decoration: none;
+    line-height: 1.1;
+    word-break: break-word;
   }
 
   .contact-links {
     display: flex;
-    gap: 12px;
+    gap: 32px;
     flex-wrap: wrap;
-    margin-top: 24px;
+  }
+
+  .contact-links a {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
   }
 
   .footer {
-    padding: 32px 24px 48px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
+    padding: 28px 24px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-faint);
+    font-size: 0.8rem;
   }
 </style>

@@ -1,4 +1,6 @@
 ---
+import { getYouTubeThumbnail } from '../utils/youtube';
+
 interface Props {
   title: string;
   description: string;
@@ -7,68 +9,121 @@ interface Props {
 }
 
 const { title, description, tags, videoUrl } = Astro.props;
+const thumbnail = videoUrl ? getYouTubeThumbnail(videoUrl) : null;
+const category = tags[0];
 ---
 
-<article class="card">
-  <h3>{title}</h3>
-  <p class="desc">{description}</p>
-  <div class="tags">
-    {tags.map((tag) => <span class="tag">{tag}</span>)}
+<a class="card" href={videoUrl} target={videoUrl ? '_blank' : undefined} rel="noopener noreferrer">
+  <div class="thumb">
+    {
+      thumbnail ? (
+        <img src={thumbnail} alt={title} loading="lazy" />
+      ) : (
+        <div class="thumb-fallback" />
+      )
+    }
+    <div class="thumb-overlay" />
+    {category && <span class="category">{category}</span>}
+    <div class="play">
+      <svg width="14" height="16" viewBox="0 0 24 28" fill="rgba(255,255,255,0.95)"><path d="M2 2 L22 14 L2 26 Z" /></svg>
+    </div>
   </div>
-  {
-    videoUrl && (
-      <a class="link" href={videoUrl} target="_blank" rel="noopener noreferrer">
-        Ver proyecto ↗
-      </a>
-    )
-  }
-</article>
+  <div class="meta">
+    <h3>{title}</h3>
+    <p class="desc">{description}</p>
+  </div>
+</a>
 
 <style>
   .card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transition: border-color 0.15s ease, transform 0.15s ease;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
   }
 
-  .card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #0a0a0c;
+    border: 1px solid var(--border);
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .card:hover .thumb img {
+    transform: scale(1.04);
+  }
+
+  .thumb-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #14141a 0%, #1c1c26 100%);
+  }
+
+  .thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.65) 100%);
+  }
+
+  .category {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    padding: 5px 9px;
+    border-radius: 3px;
+  }
+
+  .play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .card:hover .play {
+    opacity: 1;
+  }
+
+  .play > svg {
+    background: rgba(48, 84, 255, 0.9);
+    border-radius: 50%;
+    padding: 16px;
+    width: 46px;
+    height: 46px;
+    box-sizing: border-box;
   }
 
   h3 {
     margin: 0;
-    font-size: 1.1rem;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.15rem;
   }
 
   .desc {
     margin: 0;
-    color: var(--text-muted);
-    font-size: 0.92rem;
-    flex-grow: 1;
-  }
-
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .link {
-    margin-top: 4px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-decoration: none;
-    width: fit-content;
-  }
-
-  .link:hover {
-    text-decoration: underline;
+    color: var(--text-faint);
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 </style>

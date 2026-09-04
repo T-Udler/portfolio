@@ -1,13 +1,17 @@
 :root {
-  --bg: #0e0f12;
-  --bg-elevated: #17181d;
-  --border: #2a2c33;
-  --text: #f2f2f3;
-  --text-muted: #9a9ca5;
-  --accent: #7c8bff;
-  --accent-soft: rgba(124, 139, 255, 0.12);
+  --bg: #000000;
+  --bg-elevated: #0a0a0c;
+  --border: #1f1f24;
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --text-faint: rgba(255, 255, 255, 0.5);
+  --accent: #3054ff;
+  --accent-hover: #2040e0;
+  --gradient-end: #b4c0ff;
   --radius: 14px;
-  --max-width: 1080px;
+  --max-width: 1180px;
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   font-synthesis: none;
 }
 
@@ -23,7 +27,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.55;
 }
 
@@ -47,7 +51,38 @@ img {
   font-size: 0.75rem;
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: rgba(48, 84, 255, 0.14);
+  color: #9fb0ff;
   border: 1px solid transparent;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeTo70 {
+  from { opacity: 0; }
+  to { opacity: 0.7; }
+}
+
+.reveal-fade-up {
+  animation: fadeUp 0.6s ease-out both;
+}
+
+.reveal-scale {
+  animation: scaleIn 0.6s ease-out 0.2s both;
+}
+
+.reveal-fade {
+  animation: fadeTo70 0.6s ease-out 0.4s both;
+}
+
+.reveal-fade-up-delayed {
+  animation: fadeUp 0.5s ease-out 0.6s both;
 }
