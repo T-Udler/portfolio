@@ -1,0 +1,153 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { profile } from '../data/profile';
+
+const allProjects = await getCollection('projects');
+const projects = allProjects.sort((a, b) => {
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  const dateA = a.data.date?.getTime() ?? 0;
+  const dateB = b.data.date?.getTime() ?? 0;
+  return dateB - dateA;
+});
+---
+
+<Layout>
+  <Header />
+
+  <main id="top">
+    <section class="hero wrap">
+      <p class="eyebrow">Portfolio</p>
+      <h1>{profile.name}</h1>
+      <p class="role">{profile.role}</p>
+      <p class="bio">{profile.bio}</p>
+      <div class="cta">
+        <a class="button" href="#proyectos">Ver proyectos</a>
+        <a class="button ghost" href="#contacto">Contacto</a>
+      </div>
+    </section>
+
+    <section id="proyectos" class="section wrap">
+      <h2>Proyectos</h2>
+      <div class="grid">
+        {
+          projects.map((project) => (
+            <ProjectCard
+              title={project.data.title}
+              description={project.data.description}
+              tags={project.data.tags}
+              videoUrl={project.data.videoUrl}
+            />
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="contacto" class="section wrap contact">
+      <h2>Contacto</h2>
+      <p class="bio">¿Tenés un proyecto en mente? Escribime.</p>
+      <div class="contact-links">
+        <a class="button" href={`mailto:${profile.email}`}>{profile.email}</a>
+        {profile.phone && <a class="button ghost" href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>}
+        {profile.social.linkedin && (
+          <a class="button ghost" href={profile.social.linkedin} target="_blank" rel="noopener noreferrer">
+            LinkedIn ↗
+          </a>
+        )}
+      </div>
+    </section>
+
+    <footer class="footer wrap">
+      <p>© {new Date().getFullYear()} {profile.name}</p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  .hero {
+    padding: 96px 24px 64px;
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    letter-spacing: -0.02em;
+  }
+
+  .role {
+    margin: 10px 0 0;
+    font-size: 1.15rem;
+    color: var(--text-muted);
+  }
+
+  .bio {
+    max-width: 640px;
+    color: var(--text-muted);
+    margin: 20px 0 0;
+  }
+
+  .cta {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .button {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #0e0f12;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+
+  .button.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .section {
+    padding: 48px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section h2 {
+    margin: 0 0 28px;
+    font-size: 1.6rem;
+    letter-spacing: -0.01em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+
+  .footer {
+    padding: 32px 24px 48px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+</style>
