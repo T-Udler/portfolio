@@ -4,16 +4,11 @@ import { profile } from '../data/profile';
 
 <header class="header">
   <div class="wrap header-inner">
-    <a href="#top" class="brand" aria-label={profile.name}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z" />
-      </svg>
-    </a>
+    <a href="#top" class="brand">{profile.name}</a>
     <nav class="nav">
       <a href="#proyectos">Proyectos</a>
-      <a href="#contacto">Contacto</a>
+      <a href="#contacto" class="cta">Contacto</a>
     </nav>
-    <a href="#contacto" class="cta">Contacto</a>
   </div>
 </header>
 
@@ -24,54 +19,51 @@ import { profile } from '../data/profile';
     left: 0;
     right: 0;
     z-index: 50;
-    background: transparent;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent);
   }
 
   .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 20px 24px;
   }
 
   .brand {
-    display: flex;
-    align-items: center;
     text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text);
   }
 
   .nav {
-    display: none;
-    gap: 32px;
+    display: flex;
+    gap: 24px;
     align-items: center;
-  }
-
-  @media (min-width: 768px) {
-    .nav {
-      display: flex;
-    }
   }
 
   .nav a {
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
-    font-weight: 500;
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     transition: color 0.15s ease;
   }
 
   .nav a:hover {
-    color: #fff;
+    color: var(--text);
   }
 
   .cta {
-    display: inline-block;
-    background: #fff;
-    color: #000;
-    text-decoration: none;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    color: var(--text) !important;
+  }
+
+  .cta:hover {
+    border-color: var(--text-muted);
   }
 </style>

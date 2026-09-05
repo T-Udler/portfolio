@@ -2,18 +2,31 @@
 import { getYouTubeThumbnail } from '../utils/youtube';
 
 interface Props {
+  num: string;
   title: string;
-  description: string;
-  tags: string[];
+  category?: string;
+  date?: Date;
   videoUrl?: string;
+  featured: boolean;
 }
 
-const { title, description, tags, videoUrl } = Astro.props;
+const { num, title, category, date, videoUrl, featured } = Astro.props;
 const thumbnail = videoUrl ? getYouTubeThumbnail(videoUrl) : null;
-const category = tags[0];
+const meta = [category, date?.getFullYear()].filter(Boolean).join(' — ');
 ---
 
-<a class="card" href={videoUrl} target={videoUrl ? '_blank' : undefined} rel="noopener noreferrer">
+<a
+  class="entry"
+  href={videoUrl}
+  target={videoUrl ? '_blank' : undefined}
+  rel="noopener noreferrer"
+  data-category={category}
+  data-featured={featured ? 'true' : 'false'}
+>
+  <div class="entry-head">
+    <span class="num">{num}</span>
+    <span class="title">{title}</span>
+  </div>
   <div class="thumb">
     {
       thumbnail ? (
@@ -22,34 +35,53 @@ const category = tags[0];
         <div class="thumb-fallback" />
       )
     }
-    <div class="thumb-overlay" />
-    {category && <span class="category">{category}</span>}
     <div class="play">
       <svg width="14" height="16" viewBox="0 0 24 28" fill="rgba(255,255,255,0.95)"><path d="M2 2 L22 14 L2 26 Z" /></svg>
     </div>
   </div>
-  <div class="meta">
-    <h3>{title}</h3>
-    <p class="desc">{description}</p>
-  </div>
+  {meta && <div class="meta">{meta}</div>}
 </a>
 
 <style>
-  .card {
+  .entry {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     text-decoration: none;
     color: inherit;
   }
 
+  .entry[hidden] {
+    display: none;
+  }
+
+  .entry-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    min-width: 0;
+  }
+
+  .num {
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .title {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .thumb {
     position: relative;
-    aspect-ratio: 16 / 10;
-    border-radius: 4px;
+    aspect-ratio: 4 / 3;
+    background: var(--bg-elevated);
     overflow: hidden;
-    background: #0a0a0c;
-    border: 1px solid var(--border);
   }
 
   .thumb img {
@@ -59,34 +91,14 @@ const category = tags[0];
     transition: transform 0.4s ease;
   }
 
-  .card:hover .thumb img {
-    transform: scale(1.04);
+  .entry:hover .thumb img {
+    transform: scale(1.03);
   }
 
   .thumb-fallback {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #14141a 0%, #1c1c26 100%);
-  }
-
-  .thumb-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.65) 100%);
-  }
-
-  .category {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    padding: 5px 9px;
-    border-radius: 3px;
+    background: var(--bg-elevated);
   }
 
   .play {
@@ -95,16 +107,18 @@ const category = tags[0];
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(0, 0, 0, 0.15);
     opacity: 0;
     transition: opacity 0.2s ease;
   }
 
-  .card:hover .play {
+  .entry:hover .play {
     opacity: 1;
   }
 
   .play > svg {
-    background: rgba(48, 84, 255, 0.9);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--text);
     border-radius: 50%;
     padding: 16px;
     width: 46px;
@@ -112,18 +126,10 @@ const category = tags[0];
     box-sizing: border-box;
   }
 
-  h3 {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.15rem;
-  }
-
-  .desc {
-    margin: 0;
+  .meta {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: var(--text-faint);
-    font-size: 0.85rem;
-    line-height: 1.5;
   }
 </style>

@@ -1,17 +1,14 @@
 :root {
   --bg: #000000;
-  --bg-elevated: #0a0a0c;
-  --border: #1f1f24;
+  --bg-elevated: #080808;
+  --border: #1a1a1a;
   --text: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.7);
-  --text-faint: rgba(255, 255, 255, 0.5);
-  --accent: #3054ff;
-  --accent-hover: #2040e0;
-  --gradient-end: #b4c0ff;
-  --radius: 14px;
-  --max-width: 1180px;
-  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --text-muted: #8a8a8a;
+  --text-faint: #5a5a5a;
+  --radius: 4px;
+  --max-width: 1280px;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-serif: 'Bodoni Moda', Didot, 'Times New Roman', serif;
   font-synthesis: none;
 }
 
@@ -27,8 +24,9 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -40,6 +38,11 @@ img {
   display: block;
 }
 
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
+
 .wrap {
   max-width: var(--max-width);
   margin: 0 auto;
@@ -48,12 +51,14 @@ img {
 
 .tag {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(48, 84, 255, 0.14);
-  color: #9fb0ff;
-  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 @keyframes fadeUp {

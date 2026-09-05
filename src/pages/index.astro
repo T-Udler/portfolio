@@ -12,6 +12,10 @@ const projects = allProjects.sort((a, b) => {
   const dateB = b.data.date?.getTime() ?? 0;
   return dateB - dateA;
 });
+
+const categories = [...new Set(projects.map((p) => p.data.tags[0]).filter(Boolean))];
+const filters = ['Todos', 'Destacados', ...categories];
+const currentYear = new Date().getFullYear();
 ---
 
 <Layout>
@@ -19,56 +23,54 @@ const projects = allProjects.sort((a, b) => {
 
   <main id="top">
     <section class="hero">
-      <div class="blob blob-a"></div>
-      <div class="blob blob-b"></div>
-
       <div class="wrap hero-inner">
-        <div class="badge reveal-fade-up">
-          <span class="dot"></span>
-          Disponible para colaboraciones freelance
+        <div class="hero-top">
+          <span class="badge">
+            <span class="dot"></span>
+            Disponible para colaboraciones freelance
+          </span>
+          <span class="hero-role">{profile.role}</span>
         </div>
 
-        <p class="pre-headline reveal-fade-up">Realizador audiovisual — contenido generado con IA</p>
+        <h1 class="headline">{profile.name}</h1>
 
-        <h1 class="headline reveal-scale">Tomás Udler</h1>
+        <p class="sub-headline">{profile.bio}</p>
 
-        <p class="sub-headline reveal-fade">{profile.bio}</p>
-
-        <div class="cta-row reveal-fade-up-delayed">
-          <a class="btn-primary" href="#proyectos">
-            <span>Ver proyectos</span>
-            <span class="btn-primary-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </span>
-          </a>
-          <a class="btn-secondary group" href="#contacto">
-            Contacto
-            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </a>
+        <div class="cta-row">
+          <a class="btn-primary" href="#proyectos">Ver proyectos</a>
+          <a class="btn-secondary" href="#contacto">Contacto</a>
         </div>
       </div>
     </section>
 
     <section id="proyectos" class="section wrap">
-      <div class="section-head">
-        <h2>Proyectos</h2>
-        <span class="count">{projects.length} trabajos — publicidad, trailers &amp; VFX</span>
-      </div>
-      <div class="grid">
-        {
-          projects.map((project) => (
-            <ProjectCard
-              title={project.data.title}
-              description={project.data.description}
-              tags={project.data.tags}
-              videoUrl={project.data.videoUrl}
-            />
-          ))
-        }
+      <div class="proyectos-shell">
+        <nav class="filters" aria-label="Filtrar proyectos">
+          {
+            filters.map((f, i) => (
+              <button type="button" class="filter" data-filter={f} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {f}
+              </button>
+            ))
+          }
+          <div class="filters-divider"></div>
+          <span class="count" data-count>{String(projects.length).padStart(2, '0')} proyectos</span>
+        </nav>
+
+        <div class="grid">
+          {
+            projects.map((project, i) => (
+              <ProjectCard
+                num={String(i + 1).padStart(2, '0')}
+                title={project.data.title}
+                category={project.data.tags[0]}
+                date={project.data.date}
+                videoUrl={project.data.videoUrl}
+                featured={project.data.featured}
+              />
+            ))
+          }
+        </div>
       </div>
     </section>
 
@@ -86,51 +88,50 @@ const projects = allProjects.sort((a, b) => {
     </section>
 
     <footer class="footer wrap">
-      <span>© {new Date().getFullYear()} {profile.name}</span>
-      <span>{profile.location}</span>
+      <span>{profile.role}</span>
+      <span>© {currentYear} {profile.name}</span>
     </footer>
   </main>
 </Layout>
 
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter');
+  const entries = document.querySelectorAll<HTMLAnchorElement>('.entry');
+  const countEl = document.querySelector('[data-count]');
+
+  function applyFilter(filter: string) {
+    let visible = 0;
+    entries.forEach((entry) => {
+      const category = entry.dataset.category ?? '';
+      const featured = entry.dataset.featured === 'true';
+      const match = filter === 'Todos' || (filter === 'Destacados' ? featured : category === filter);
+      entry.hidden = !match;
+      if (match) visible += 1;
+    });
+    if (countEl) countEl.textContent = `${String(visible).padStart(2, '0')} proyectos`;
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      applyFilter(btn.dataset.filter ?? 'Todos');
+    });
+  });
+</script>
+
 <style>
   .hero {
     position: relative;
-    min-height: 100vh;
+    min-height: 92vh;
     display: flex;
     align-items: center;
-    overflow: hidden;
-    background: #000;
-  }
-
-  .blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    mix-blend-mode: screen;
-    pointer-events: none;
-  }
-
-  .blob-a {
-    top: -20%;
-    left: 20%;
-    width: 600px;
-    height: 600px;
-    background: rgba(30, 58, 138, 0.2);
-  }
-
-  .blob-b {
-    bottom: -10%;
-    right: 20%;
-    width: 500px;
-    height: 500px;
-    background: rgba(49, 46, 129, 0.2);
+    background: var(--bg);
   }
 
   .hero-inner {
     position: relative;
     z-index: 10;
-    max-width: 900px;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -139,163 +140,181 @@ const projects = allProjects.sort((a, b) => {
     padding-top: 80px;
   }
 
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 24px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
   .badge {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
   }
 
   .dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--text);
     display: inline-block;
   }
 
-  .pre-headline {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: clamp(1.75rem, 4vw, 3rem);
-    line-height: 1.1;
-    color: #fff;
+  .hero-role {
+    color: var(--text-faint);
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .hero-role {
+      display: inline;
+    }
   }
 
   .headline {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-size: clamp(3.5rem, 12vw, 8.5rem);
-    line-height: 0.9;
-    letter-spacing: -0.03em;
-    background: linear-gradient(to bottom, #fff, #fff 60%, var(--gradient-end));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
+    margin: clamp(24px, 6vw, 56px) 0 0;
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: clamp(2.6rem, 8.5vw, 7.5rem);
+    line-height: 0.95;
+    letter-spacing: clamp(0.02em, 1vw, 0.08em);
+    text-indent: clamp(0.02em, 1vw, 0.08em);
+    color: var(--text);
   }
 
   .sub-headline {
     margin: 0;
     max-width: 560px;
-    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
-    line-height: 1.65;
-    color: var(--text);
-    opacity: 0.7;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--text-muted);
   }
 
   .cta-row {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
+    gap: 16px;
     align-items: center;
-    margin-top: 8px;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
-  @media (min-width: 640px) {
-    .cta-row {
-      flex-direction: row;
-    }
-  }
-
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 20px;
-    background: #fff;
-    border-radius: 999px;
-    padding: 8px 8px 8px 24px;
-    text-decoration: none;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-  }
-
-  .btn-primary:hover {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-    transform: scale(1.03);
-  }
-
-  .btn-primary span:first-child {
-    font-family: var(--font-sans);
-    font-weight: 500;
-    font-size: 1.05rem;
-    color: #0a0400;
-  }
-
-  .btn-primary-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s ease;
-  }
-
-  .btn-primary:hover .btn-primary-icon {
-    background: var(--accent-hover);
-  }
-
+  .btn-primary,
   .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.7);
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    transition: color 0.15s ease, background 0.15s ease;
+    padding: 12px 24px;
+    border-radius: 999px;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: #000;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.85;
+  }
+
+  .btn-secondary {
+    color: var(--text-muted);
+    border: 1px solid var(--border);
   }
 
   .btn-secondary:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .btn-secondary .arrow {
-    transition: transform 0.2s ease;
-  }
-
-  .btn-secondary:hover .arrow {
-    transform: translateX(4px);
+    color: var(--text);
+    border-color: var(--text-muted);
   }
 
   .section {
-    padding: 96px 24px;
+    padding: 64px 24px 96px;
     border-top: 1px solid var(--border);
   }
 
-  .section-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 40px;
+  .proyectos-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
   }
 
-  .section-head h2 {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 2.4rem;
+  @media (min-width: 900px) {
+    .proyectos-shell {
+      grid-template-columns: 168px minmax(0, 1fr);
+    }
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 900px) {
+    .filters {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+
+  .filter {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .filter:hover {
+    color: var(--text-muted);
+  }
+
+  .filter[aria-pressed='true'] {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .filters-divider {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .filters-divider {
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 2px 0;
+    }
   }
 
   .count {
-    font-size: 0.85rem;
     color: var(--text-faint);
+    font-size: 10px;
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 28px 24px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    column-gap: clamp(20px, 2.6vw, 40px);
+    row-gap: clamp(44px, 5vw, 72px);
   }
 
   .contact {
@@ -306,18 +325,17 @@ const projects = allProjects.sort((a, b) => {
   }
 
   .eyebrow {
-    font-size: 0.75rem;
+    font-size: 11px;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
     color: var(--text-faint);
   }
 
   .contact-email {
     font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
+    font-weight: 300;
     font-size: clamp(2rem, 6vw, 3.5rem);
-    color: #fff;
+    color: var(--text);
     text-decoration: none;
     line-height: 1.1;
     word-break: break-word;
@@ -327,10 +345,12 @@ const projects = allProjects.sort((a, b) => {
     display: flex;
     gap: 32px;
     flex-wrap: wrap;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 
   .contact-links a {
-    font-size: 0.9rem;
     color: var(--text-muted);
     text-decoration: none;
     border-bottom: 1px solid var(--border);
@@ -343,6 +363,8 @@ const projects = allProjects.sort((a, b) => {
     display: flex;
     justify-content: space-between;
     color: var(--text-faint);
-    font-size: 0.8rem;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 </style>
