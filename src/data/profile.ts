@@ -8,4 +8,5 @@ export const profile = {
   social: {
     linkedin: 'http://www.linkedin.com/in/tomas-udler-416319295',
   },
+  reelUrl: 'https://youtu.be/uwNnZl9rVx0',
 };
