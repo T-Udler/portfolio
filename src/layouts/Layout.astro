@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { profile } from '../data/profile';
+import AmbientBackground from '../components/AmbientBackground.astro';
 
 interface Props {
   title?: string;
@@ -26,6 +27,7 @@ const { title = profile.name, description = profile.bio } = Astro.props;
     <title>{title} — Portfolio</title>
   </head>
   <body>
+    <AmbientBackground />
     <slot />
   </body>
 </html>
