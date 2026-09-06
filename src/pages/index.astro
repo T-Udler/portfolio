@@ -1,435 +1,739 @@
 ---
 import { getCollection } from 'astro:content';
-import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import ProjectCard from '../components/ProjectCard.astro';
 import { profile } from '../data/profile';
-import { getYouTubeId } from '../utils/youtube';
+import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
 
-const reelId = profile.reelUrl ? getYouTubeId(profile.reelUrl) : null;
+const CATEGORY_OVERRIDES: Record<string, string> = {
+  'harry-potter-trailer': 'Publicidad',
+  'top-gun-trailer': 'Publicidad',
+  'dot-vfx-montaje': 'Videoclips',
+  'genesis-turin': 'Videoclips',
+};
 
 const allProjects = await getCollection('projects');
-const projects = allProjects.sort((a, b) => {
-  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
-  const dateA = a.data.date?.getTime() ?? 0;
-  const dateB = b.data.date?.getTime() ?? 0;
-  return dateB - dateA;
-});
+const projects = allProjects.map((p) => ({
+  title: p.data.title,
+  category: CATEGORY_OVERRIDES[p.id] ?? p.data.tags[0],
+  year: p.data.date ? p.data.date.getFullYear() : null,
+  url: p.data.videoUrl,
+  thumb: getYouTubeThumbnail(p.data.videoUrl) ?? '',
+}));
 
-const categories = [...new Set(projects.map((p) => p.data.tags[0]).filter(Boolean))];
-const filters = ['Todos', 'Destacados', ...categories];
-const currentYear = new Date().getFullYear();
+function byCategory(cat: string) {
+  return projects.filter((p) => p.category === cat);
+}
+
+const reelId = profile.reelUrl ? getYouTubeId(profile.reelUrl) : null;
+const reelEmbedUrl = reelId ? `https://www.youtube-nocookie.com/embed/${reelId}` : '';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const wallpaperUrl = `${base}/xp/wallpaper.jpg`;
+const startupSoundUrl = `${base}/xp/startup.wav`;
+const startLogoUrl = `${base}/xp/start-logo.png`;
+const faviconUrl = `${base}/favicon-xp.svg`;
+
+const siteOrigin = Astro.site ? Astro.site.origin : '';
+const pageUrl = `${siteOrigin}${base}/`;
+const ogImageUrl = `${siteOrigin}${base}/og-xp.png`;
+
+const IE_BADGE = 'radial-gradient(circle at 32% 28%,#cfe8ff,#10529f)';
+const FOLDER_BADGE = 'linear-gradient(180deg,#ffe08a,#e2a52c)';
+
+const APPS: Record<string, any> = {
+  reel: {
+    label: 'Reel', shape: 'reel', kind: 'reel', w: 560,
+    title: 'Reel.avi — Windows Media Player', badge: 'linear-gradient(160deg,#e8f2ff,#1f5fa8)',
+    menu: ['File', 'View', 'Play', 'Tools', 'Help'],
+    embedUrl: reelEmbedUrl,
+    body: 'Un resumen de piezas y proyectos recientes: publicidad, trailers y video arte producidos combinando dirección de imagen, montaje y herramientas de IA generativa.',
+    status: 'Reproduciendo — Reel 2026', status2: 'YouTube',
+  },
+  work: {
+    label: 'Selected Work', shape: 'folder', kind: 'grid', w: 720,
+    title: 'Selected Work', badge: FOLDER_BADGE,
+    menu: ['File', 'Edit', 'View', 'Favorites', 'Tools', 'Help'],
+    items: projects, status: `${projects.length} objects`, status2: `${projects.length} proyectos`,
+  },
+  about: {
+    label: 'About Me', shape: 'monitor', kind: 'text', w: 520,
+    title: 'About Me — My Computer', badge: 'linear-gradient(160deg,#e7ebf2,#8c95a3)',
+    menu: ['File', 'Edit', 'View', 'Help'],
+    heading: `${profile.name} — Realizador de Video con Inteligencia Artificial`,
+    body: 'Soy realizador audiovisual especializado en producir contenido con inteligencia artificial generativa: dirijo, edito y produzco piezas publicitarias, trailers y proyectos audiovisuales de punta a punta.\n\nCombino dirección de imagen, montaje, VFX y herramientas de IA generativa (generación de imagen y video, prompt engineering) con flujos de post-producción tradicionales, para lograr piezas listas para campañas reales.',
+    rows: [
+      { k: 'Ubicación', v: profile.location },
+      { k: 'Disponibilidad', v: 'Freelance / productoras' },
+      { k: 'Producciones', v: 'Boxfish TV, proyectos independientes' },
+    ],
+    status: 'Local Disk (C:) — bio.txt', status2: '2 KB',
+  },
+  contact: {
+    label: 'Contact', shape: 'ie', kind: 'text', w: 500,
+    title: 'Contact — Microsoft Internet Explorer', badge: IE_BADGE,
+    menu: ['File', 'Edit', 'View', 'Favorites', 'Tools', 'Help'],
+    heading: 'Trabajemos juntos', body: '',
+    rows: [
+      { k: 'Email', v: `<a href="mailto:${profile.email}">${profile.email}</a>` },
+      { k: 'Teléfono', v: profile.phone ?? '' },
+      { k: 'LinkedIn', v: profile.social.linkedin ? `<a href="${profile.social.linkedin}" target="_blank" rel="noopener">Ver perfil de LinkedIn ↗</a>` : '' },
+    ],
+    status: 'http://udler.portfolio/contacto', status2: 'Internet',
+  },
+  publicidad: {
+    label: 'Publicidad', shape: 'folder', kind: 'grid', w: 720, title: 'Publicidad', badge: FOLDER_BADGE,
+    menu: ['File', 'Edit', 'View', 'Favorites', 'Tools', 'Help'],
+    items: byCategory('Publicidad'), status: `${byCategory('Publicidad').length} objects`, status2: 'Spots & campañas',
+  },
+  videoclips: {
+    label: 'Videoclips', shape: 'folder', kind: 'grid', w: 720, title: 'Videoclips', badge: FOLDER_BADGE,
+    menu: ['File', 'Edit', 'View', 'Favorites', 'Tools', 'Help'],
+    items: byCategory('Videoclips'), status: `${byCategory('Videoclips').length} objects`, status2: 'VFX & video arte',
+  },
+  sysinfo: {
+    label: 'System Info', shape: 'chip', kind: 'text', w: 480,
+    title: 'System Properties', badge: 'linear-gradient(160deg,#3c424c,#14171c)',
+    menu: ['General', 'Hardware', 'Advanced'],
+    heading: 'Propiedades del sistema', body: 'Sistema operado con:',
+    rows: [
+      { k: 'Generación de imagen', v: 'Nano Banana Pro, GPT Image' },
+      { k: 'Generación de video', v: 'Veo 3, Kling AI, Seedance 2.5' },
+      { k: 'Edición / VFX', v: 'Premiere Pro, After Effects, DaVinci Resolve' },
+      { k: 'Motion capture / interactivo', v: 'TouchDesigner, Xbox Kinect' },
+    ],
+    status: 'Local Disk (C:)', status2: 'Propiedades',
+  },
+  recyclebin: {
+    label: 'Recycle Bin', shape: 'bin', kind: 'text', w: 420,
+    title: 'Recycle Bin', badge: 'linear-gradient(160deg,#eef2f6,#8c95a3)',
+    menu: ['File', 'Edit', 'View', 'Help'],
+    heading: '', body: 'La papelera de reciclaje está vacía.', rows: [],
+    status: '0 objects', status2: '0 KB',
+  },
+};
+
+const DESKTOP_ORDER = ['reel', 'work', 'about', 'contact', 'publicidad', 'videoclips', 'sysinfo', 'recyclebin'];
+const START_LEFT = ['reel', 'work', 'about', 'contact'];
+const START_RIGHT = ['publicidad', 'videoclips', 'sysinfo', 'recyclebin'];
 ---
 
-<Layout>
-  <Header />
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={profile.bio} />
+  <link rel="icon" type="image/svg+xml" href={faviconUrl} />
+  <title>{profile.name} — Portfolio</title>
 
-  <main id="top">
-    <section class="hero">
-      <div class="wrap hero-inner">
-        <div class="hero-top">
-          <span class="badge">
-            <span class="dot"></span>
-            Disponible para colaboraciones freelance
-          </span>
-          <span class="hero-role">{profile.role}</span>
-        </div>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={`${profile.name} — Portfolio`} />
+  <meta property="og:description" content={profile.bio} />
+  <meta property="og:image" content={ogImageUrl} />
+  <meta property="og:url" content={pageUrl} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={`${profile.name} — Portfolio`} />
+  <meta name="twitter:description" content={profile.bio} />
+  <meta name="twitter:image" content={ogImageUrl} />
 
-        <h1 class="headline">{profile.name}</h1>
+  <style is:global>
+    :root{
+      --sky-top:#1e6fc4; --sky-mid:#7fc0ec; --sky-low:#c4e2f4;
+      --grass-hi:#8ac93a; --grass-lo:#5f9422;
+      --luna-blue-hi:#3f8cf3; --luna-blue-mid:#1c5fd6; --luna-blue-lo:#0831d9; --luna-blue-deep:#0f2f80;
+      --luna-blue-inactive-hi:#9dbdee; --luna-blue-inactive-lo:#6b8cc4;
+      --start-green-hi:#79c93c; --start-green-mid:#4f9a26; --start-green-lo:#255c16;
+      --chrome:#ece9d8; --chrome-edge:#d6d2c2; --chrome-hi:#f5f3e9;
+      --paper:#ffffff; --paper-edge:#7f9db9;
+      --ink:#1c1c14; --ink-soft:#3a3a2f; --ink-faint:#6b6b5c;
+      --link:#0a246a; --select:#316ac5;
+      --folder-hi:#ffe08a; --folder-lo:#e2a52c; --folder-line:#a97b12;
+      --font-ui:Tahoma,Verdana,Geneva,'DejaVu Sans',sans-serif;
+      --font-mono:'Courier New',Courier,monospace;
+      color-scheme: light;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; overflow:hidden; background:var(--sky-top);
+      font-family:var(--font-ui); font-size:11px; color:var(--ink);
+      -webkit-font-smoothing:antialiased; user-select:none;
+    }
+    button{ font-family:inherit; }
 
-        <p class="sub-headline">{profile.bio}</p>
+    #desktop{ position:fixed; inset:0; overflow:hidden; }
+    .sky{
+      position:absolute; inset:0;
+      background-color:#4d9de0;
+      background-size:cover;
+      background-position:center bottom;
+      background-image:
+        radial-gradient(150% 78% at 50% 132%, var(--grass-lo) 0%, #74ad2b 22%, var(--grass-hi) 40%, #86c235 52%, rgba(134,194,53,0.85) 60%, rgba(134,194,53,0) 66%),
+        radial-gradient(60% 26% at 18% 22%, rgba(255,255,255,0.85), rgba(255,255,255,0) 70%),
+        radial-gradient(46% 20% at 74% 15%, rgba(255,255,255,0.75), rgba(255,255,255,0) 72%),
+        radial-gradient(30% 14% at 44% 33%, rgba(255,255,255,0.5), rgba(255,255,255,0) 75%),
+        linear-gradient(180deg, var(--sky-top) 0%, #3f92dd 32%, var(--sky-mid) 54%, var(--sky-low) 66%, #a8cf7a 74%, var(--grass-hi) 86%, var(--grass-lo) 100%);
+    }
 
-        <div class="cta-row">
-          <a class="btn-primary" href="#proyectos">Ver proyectos</a>
-          <a class="btn-secondary" href="#contacto">Contacto</a>
+    #icon-layer{
+      position:absolute; left:14px; top:14px; bottom:46px;
+      display:flex; flex-direction:column; flex-wrap:wrap; align-content:flex-start;
+      gap:6px 4px; z-index:20;
+    }
+    .xp-icon{
+      width:86px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; gap:4px;
+      padding:6px 3px 7px; cursor:default; background:transparent; border:1px dotted transparent;
+    }
+    .xp-icon:hover{ background:rgba(49,106,197,0.28); }
+    .xp-icon:active{ background:rgba(49,106,197,0.5); border-color:rgba(255,255,255,0.7); }
+    .xp-icon-glyph{ width:34px; height:34px; position:relative; display:flex; align-items:center; justify-content:center; filter:drop-shadow(1px 1px 1px rgba(0,0,0,0.35)); }
+    .xp-icon-label{
+      max-width:80px; text-align:center; line-height:1.25; color:#fff;
+      text-shadow:1px 1px 2px rgba(0,0,0,0.85); padding:1px 3px;
+    }
+
+    .glyph-folder{ position:relative; width:32px; height:25px; }
+    .glyph-folder .tab{ position:absolute; left:0; top:0; width:13px; height:5px; background:linear-gradient(180deg,#ffe9a0,var(--folder-hi)); border:1px solid var(--folder-line); border-bottom:none; }
+    .glyph-folder .body{ position:absolute; left:0; top:4px; width:30px; height:20px; background:linear-gradient(180deg,var(--folder-hi) 0%,#f7c451 40%,var(--folder-lo) 100%); border:1px solid var(--folder-line); }
+    .glyph-folder .shine{ position:absolute; left:1px; top:5px; width:28px; height:5px; background:rgba(255,255,255,0.5); }
+
+    .glyph-monitor{ position:relative; width:32px; height:28px; }
+    .glyph-monitor .case{ position:absolute; left:1px; top:0; width:30px; height:21px; background:linear-gradient(160deg,#e7ebf2,#b9c2d0); border:1px solid #5b6472; }
+    .glyph-monitor .screen{ position:absolute; left:4px; top:3px; width:24px; height:15px; background:linear-gradient(160deg,#7fb4e8,#1f5fa8); border:1px solid #33465e; }
+    .glyph-monitor .stand{ position:absolute; left:9px; top:22px; width:14px; height:5px; background:linear-gradient(180deg,#cdd4de,#8c95a3); border:1px solid #5b6472; }
+
+    .glyph-globe{ width:28px; height:28px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #cfe8ff 0%, #4a9be0 38%, #10529f 78%, #062f63 100%); border:1px solid #062f63; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.35); }
+
+    .glyph-ie{ position:relative; width:32px; height:32px; }
+    .glyph-ie .ring{ position:absolute; inset:0; border-radius:50%; background:conic-gradient(from -50deg, #ffd25c 0deg 65deg, #f2a71b 65deg 95deg, #1f5fa8 95deg 360deg); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.15); }
+    .glyph-ie .disc{ position:absolute; inset:3px; border-radius:50%; background:radial-gradient(circle at 35% 28%, #7cc0ff, #1a56b0 58%, #082a5e 100%); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .glyph-ie .disc span{ font-family:Georgia,'Times New Roman',serif; font-style:italic; font-weight:bold; font-size:17px; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,0.45); transform:translate(-1px,0); }
+
+    .glyph-chip{ position:relative; width:30px; height:30px; margin:2px auto; }
+    .glyph-chip .core{ position:absolute; inset:5px; background:linear-gradient(160deg,#3c424c,#14171c); border:1px solid #060708; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:bold; letter-spacing:0.05em; color:#8fd3ff; }
+    .glyph-chip .pin{ position:absolute; width:4px; height:2px; background:#cbd2db; }
+    .glyph-chip .p1{ left:6px; top:0; } .glyph-chip .p2{ left:14px; top:0; } .glyph-chip .p3{ left:6px; bottom:0; } .glyph-chip .p4{ left:14px; bottom:0; }
+    .glyph-chip .p5{ left:0; top:7px; width:2px; height:4px; } .glyph-chip .p6{ left:0; top:15px; width:2px; height:4px; }
+    .glyph-chip .p7{ right:0; top:7px; width:2px; height:4px; } .glyph-chip .p8{ right:0; top:15px; width:2px; height:4px; }
+
+    .glyph-bin{ position:relative; width:26px; height:32px; margin:0 3px; }
+    .glyph-bin .handle{ position:absolute; left:9px; top:0; width:8px; height:4px; border:2px solid #8b95a3; border-bottom:none; border-radius:3px 3px 0 0; box-sizing:border-box; }
+    .glyph-bin .lid{ position:absolute; left:0; top:4px; width:26px; height:4px; background:linear-gradient(180deg,#eef2f6,#aab4c2); border:1px solid #6b7684; border-radius:1px; }
+    .glyph-bin .body{ position:absolute; left:2px; top:8px; width:22px; height:22px; background:linear-gradient(180deg,#eef2f6,#c3cbd6); border:1px solid #6b7684; border-top:none; clip-path:polygon(6% 0,94% 0,86% 100%,14% 100%); }
+    .glyph-bin .arrows{ position:absolute; left:0; top:13px; width:26px; text-align:center; font-size:13px; line-height:1; color:#2f6d1c; }
+
+    .glyph-reel{ position:relative; width:30px; height:30px; border-radius:50%; background:radial-gradient(circle at 34% 26%, #6f7783 0%, #3c424c 55%, #191c22 100%); border:1px solid #14171c; display:flex; align-items:center; justify-content:center; }
+    .glyph-reel .hub{ width:8px; height:8px; border-radius:50%; background:#d9dee6; border:1px solid #6b7280; }
+    .glyph-reel span{ position:absolute; width:6px; height:6px; border-radius:50%; background:#12151a; }
+    .glyph-reel .h1{ left:4px; top:5px; } .glyph-reel .h2{ right:4px; top:5px; } .glyph-reel .h3{ left:11px; bottom:3px; }
+
+    #windows-layer{ position:absolute; inset:0; z-index:100; pointer-events:none; }
+    .xp-window{
+      position:absolute; display:flex; flex-direction:column; pointer-events:auto;
+      background:var(--chrome); border:1px solid var(--luna-blue-lo);
+      box-shadow:2px 2px 10px rgba(0,0,0,0.5);
+    }
+    .xp-window.maximized{ box-shadow:none; }
+    .xp-titlebar{
+      display:flex; align-items:center; gap:6px; height:28px; padding:0 3px 0 7px; cursor:move;
+      background:linear-gradient(180deg,var(--luna-blue-inactive-hi) 0%,#9dbdee 10%,var(--luna-blue-inactive-lo) 55%,#6b8cc4 100%);
+    }
+    .xp-window.active .xp-titlebar{
+      background:linear-gradient(180deg,#0058e6 0%,var(--luna-blue-hi) 8%,var(--luna-blue-mid) 42%,#0d47b4 92%,var(--luna-blue-lo) 100%);
+    }
+    .xp-badge{ width:16px; height:16px; flex:none; border:1px solid rgba(0,0,0,0.35); border-radius:2px; }
+    .xp-title{ flex:1; min-width:0; font-weight:bold; font-size:11.5px; color:#fff; text-shadow:1px 1px 1px rgba(0,0,0,0.5); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .xp-buttons{ display:flex; gap:2px; flex:none; }
+    .xp-buttons button{
+      width:20px; height:19px; display:flex; align-items:center; justify-content:center; padding:0;
+      background:linear-gradient(180deg,#5b9df4,#2361cf); border:1px solid #fff; box-shadow:inset -1px -1px 0 rgba(0,0,0,0.25);
+      cursor:pointer; color:#fff; font-size:12px; line-height:1;
+    }
+    .xp-buttons button:hover{ background:linear-gradient(180deg,#8bbcfa,#3f7ce0); }
+    .xp-buttons button.close{ background:linear-gradient(180deg,#f08a72,#c1341a); font-weight:bold; }
+    .xp-buttons button.close:hover{ background:linear-gradient(180deg,#f7a794,#d94526); }
+    .xp-menubar{ display:flex; align-items:center; gap:14px; padding:3px 8px; background:var(--chrome); border-top:1px solid var(--chrome-hi); border-bottom:1px solid var(--chrome-edge); font-size:11px; color:var(--ink-soft); }
+    .xp-menubar span{ padding:1px 4px; cursor:default; }
+    .xp-menubar span:hover{ background:var(--link); color:#fff; }
+    .xp-body{ margin:6px; background:var(--paper); border:1px solid var(--paper-edge); box-shadow:inset 1px 1px 0 rgba(0,0,0,0.08); overflow:auto; }
+    .xp-statusbar{ display:flex; gap:2px; margin:0 6px 6px; font-size:11px; color:var(--ink-soft); }
+    .xp-statusbar span{ padding:2px 6px; background:var(--chrome); border:1px solid var(--chrome-edge); box-shadow:inset 1px 1px 0 rgba(0,0,0,0.06); }
+    .xp-statusbar span.s1{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .xp-statusbar span.s2{ width:120px; }
+
+    .xp-reel-stage{ background:#101215; padding:10px; }
+    .xp-reel-frame{ position:relative; width:100%; aspect-ratio:16/9; background:#000; }
+    .xp-reel-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .xp-reel-desc{ padding:10px 12px; font-size:11px; line-height:1.75; color:var(--ink); }
+
+    .xp-text{ padding:14px 16px; display:flex; flex-direction:column; gap:14px; max-width:560px; }
+    .xp-text h2{ margin:0; font-size:16px; color:var(--link); }
+    .xp-text pre{ margin:0; font-family:var(--font-mono); font-size:12px; line-height:1.85; color:var(--ink); white-space:pre-wrap; }
+    .xp-rows{ display:flex; flex-direction:column; }
+    .xp-row{ display:grid; grid-template-columns:120px minmax(0,1fr); gap:10px; padding-top:6px; margin-top:6px; border-top:1px solid #e2e0d2; font-size:11px; }
+    .xp-row .k{ color:var(--ink-faint); }
+    .xp-row .v a{ color:var(--link); }
+
+    .xp-grid-wrap{ display:flex; align-items:flex-start; }
+    .xp-sidebar{ flex:none; width:150px; padding:10px 8px; background:linear-gradient(180deg,#dce9fb,#c3d9f5); border-right:1px solid #a9c3e6; }
+    .xp-sb-title{ font-weight:bold; font-size:11px; color:var(--link); padding:2px 4px 6px; }
+    .xp-sb-item{ display:flex; align-items:center; gap:5px; padding:3px 4px; font-size:11px; color:var(--link); cursor:pointer; border-radius:2px; }
+    .xp-sb-item:hover{ text-decoration:underline; background:rgba(255,255,255,0.4); }
+    .xp-sb-item .dot{ width:6px; height:6px; border-radius:50%; background:#5a8fd6; flex:none; }
+    .xp-sb-item.static{ color:var(--ink-soft); cursor:default; }
+    .xp-sb-item.static:hover{ text-decoration:none; background:transparent; }
+    .xp-sb-item.static .dot{ background:#8c95a3; }
+    .xp-sb-sep{ height:1px; background:#a9c3e6; margin:8px 2px; }
+    .xp-grid{ flex:1; min-width:0; padding:10px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .xp-card{ display:flex; flex-direction:column; gap:5px; text-decoration:none; color:inherit; cursor:pointer; }
+    .xp-card .thumb{ position:relative; width:100%; aspect-ratio:4/3; background:#dcdcd2; border:1px solid #a6a493; overflow:hidden; }
+    .xp-card .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .xp-card .title{ font-size:11px; color:var(--link); line-height:1.35; }
+    .xp-card .meta{ font-size:10px; color:var(--ink-faint); }
+
+    #start-menu{
+      position:absolute; left:0; bottom:34px; z-index:9000; width:min(380px,94vw);
+      background:#fff; border:1px solid var(--luna-blue-lo); box-shadow:2px -2px 10px rgba(0,0,0,0.4);
+      display:flex; flex-direction:column;
+    }
+    .sm-head{ display:flex; align-items:center; gap:10px; padding:9px 10px; background:linear-gradient(180deg,#1c5fd6 0%,#3f8cf3 8%,#1c5fd6 45%,#0d47b4 100%); }
+    .sm-avatar{ width:34px; height:34px; flex:none; background:linear-gradient(160deg,#e7ebf2,#8c95a3); border:2px solid #fff; }
+    .sm-name{ font-weight:bold; font-size:13px; color:#fff; text-shadow:1px 1px 1px rgba(0,0,0,0.5); }
+    .sm-cols{ display:grid; grid-template-columns:1.1fr 0.9fr; }
+    .sm-left{ padding:6px 0; background:#fff; border-right:1px solid #b6c9e6; }
+    .sm-right{ padding:6px 0; background:#d3e5fa; }
+    .sm-item{ padding:6px 12px; cursor:default; font-size:11px; color:#000; }
+    .sm-item:hover{ background:var(--select); color:#fff; }
+    .sm-item:hover .sm-sub{ color:#dbe8fb; }
+    .sm-item b{ display:block; }
+    .sm-sub{ font-size:10px; color:var(--ink-faint); }
+    .sm-right .sm-item{ color:var(--link); }
+    .sm-foot{ display:flex; justify-content:flex-end; gap:14px; padding:6px 12px; background:linear-gradient(180deg,#3f8cf3,#0d47b4); font-size:11px; color:#fff; }
+    .sm-foot span{ cursor:default; }
+
+    .taskbar{
+      position:absolute; left:0; right:0; bottom:0; z-index:9500; height:34px;
+      display:flex; align-items:stretch;
+      background:linear-gradient(180deg,#2b7de0 0%,var(--luna-blue-lo) 8%,#245edb 45%,#1541a8 92%,var(--luna-blue-deep) 100%);
+      border-top:1px solid #4f9bee;
+    }
+    .start-btn{
+      display:flex; align-items:center; gap:6px; padding:0 20px 0 12px; margin:2px 0 2px 2px;
+      background:linear-gradient(180deg,var(--start-green-hi) 0%,#8fe04e 8%,var(--start-green-mid) 48%,#2f6d1c 92%,var(--start-green-lo) 100%);
+      border:none; border-radius:0 10px 10px 0; cursor:pointer;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.45);
+      font-style:italic; font-weight:bold; font-size:13px; color:#fff; text-shadow:1px 1px 1px rgba(0,0,0,0.55);
+      letter-spacing:0.02em; white-space:nowrap;
+    }
+    .start-btn.open{ background:linear-gradient(180deg,#2f6d1c 0%,var(--start-green-mid) 45%,#3a7d1d 100%); }
+    .start-logo{ width:20px; height:20px; object-fit:contain; }
+    #taskbar-items{ flex:1; display:flex; align-items:center; gap:3px; padding:0 4px; min-width:0; overflow:hidden; }
+    .task-btn{
+      display:flex; align-items:center; gap:6px; height:25px; padding:0 10px; min-width:0; max-width:180px;
+      background:linear-gradient(180deg,#3f8cf3,var(--luna-blue-lo)); border:1px solid #4f9bee;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.3); font-size:11px; color:#fff; cursor:pointer;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .task-btn.active{ background:linear-gradient(180deg,#1746a8,#2f74d8); border-color:var(--luna-blue-deep); box-shadow:inset 1px 1px 2px rgba(0,0,0,0.45); }
+    .task-btn .dot{ width:12px; height:12px; flex:none; border-radius:2px; border:1px solid rgba(0,0,0,0.3); }
+    .tray{ display:flex; align-items:center; gap:8px; padding:0 10px 0 8px; background:linear-gradient(180deg,#2f96e8 0%,#1479d3 12%,#1274cb 60%,#0b57a6 100%); border-left:1px solid #4f9bee; font-size:11px; color:#fff; }
+    #clock{ text-shadow:1px 1px 1px rgba(0,0,0,0.5); font-variant-numeric:tabular-nums; }
+
+    [hidden]{ display:none !important; }
+
+    #mobile-root{ position:fixed; inset:0; overflow:hidden; }
+    .m-sky{ position:absolute; inset:0; background-color:#4d9de0; background-size:cover; background-position:center bottom; }
+    .m-home{ position:relative; height:100%; overflow-y:auto; display:flex; flex-direction:column; }
+    .m-header{ display:flex; align-items:center; gap:12px; padding:20px 16px 16px; }
+    .m-avatar{ width:44px; height:44px; flex:none; border-radius:8px; background:rgba(255,255,255,0.85); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+    .m-name{ font-weight:bold; font-size:15px; color:#fff; text-shadow:1px 1px 2px rgba(0,0,0,0.6); }
+    .m-role{ font-size:11px; color:#fff; text-shadow:1px 1px 2px rgba(0,0,0,0.6); }
+    .m-icons{ flex:1; display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:14px 4px; padding:10px 12px 30px; align-content:start; }
+    .m-icon{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 2px; cursor:pointer; }
+    .m-icon:active{ background:rgba(49,106,197,0.35); border-radius:4px; }
+    .m-icon .xp-icon-glyph{ width:38px; height:38px; }
+    .m-icon .xp-icon-label{ font-size:11.5px; max-width:82px; }
+
+    .m-view{ position:absolute; inset:0; display:flex; flex-direction:column; background:var(--chrome); }
+    .m-view-bar{ display:flex; align-items:center; gap:10px; height:48px; padding:0 10px; flex:none; background:linear-gradient(180deg,#0058e6 0%,var(--luna-blue-hi) 8%,var(--luna-blue-mid) 42%,#0d47b4 92%,var(--luna-blue-lo) 100%); }
+    .m-back{ flex:none; border:1px solid #fff; background:rgba(255,255,255,0.15); color:#fff; font-size:13px; font-weight:bold; padding:7px 12px; border-radius:4px; }
+    .m-view-title{ font-weight:bold; font-size:13px; color:#fff; text-shadow:1px 1px 1px rgba(0,0,0,0.5); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .m-view-body{ flex:1; overflow-y:auto; background:var(--paper); }
+
+    @media (max-width:820px){
+      .xp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="desktop">
+    <div class="sky"></div>
+    <div id="icon-layer"></div>
+    <div id="windows-layer"></div>
+    <div id="start-menu" hidden></div>
+    <div class="taskbar">
+      <button id="start-btn" class="start-btn" type="button">
+        <img class="start-logo" src={startLogoUrl} alt="" /><span>{profile.name.toUpperCase()}</span>
+      </button>
+      <div id="taskbar-items"></div>
+      <div class="tray"><span id="clock"></span></div>
+    </div>
+  </div>
+
+  <div id="mobile-root" hidden>
+    <div class="m-sky"></div>
+    <div id="m-home" class="m-home">
+      <div class="m-header">
+        <div class="m-avatar"><div class="glyph-monitor"><div class="case"></div><div class="screen"></div><div class="stand"></div></div></div>
+        <div>
+          <div class="m-name">{profile.name}</div>
+          <div class="m-role">Realizador de Video con IA</div>
         </div>
       </div>
-    </section>
+      <div id="m-icons" class="m-icons"></div>
+    </div>
+    <div id="m-view" class="m-view" hidden>
+      <div class="m-view-bar">
+        <button id="m-back" type="button" class="m-back">&#8249; Atrás</button>
+        <span id="m-view-title" class="m-view-title"></span>
+      </div>
+      <div id="m-view-body" class="m-view-body"></div>
+    </div>
+  </div>
 
-    <section id="reel" class="section wrap reel">
-      <span class="eyebrow">Demo Reel</span>
-      <p class="reel-sub">Un resumen de piezas y proyectos recientes.</p>
-      <div class="reel-frame">
-        {
-          reelId ? (
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${reelId}`}
-              title="Demo reel"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            />
-          ) : (
-            <div class="reel-placeholder">
-              <span>Reel disponible próximamente</span>
-            </div>
-          )
+  <script define:vars={{ APPS, DESKTOP_ORDER, START_LEFT, START_RIGHT, wallpaperUrl, startupSoundUrl }}>
+  (function () {
+    document.querySelector('.sky').style.backgroundImage = 'url(' + wallpaperUrl + ')';
+    document.querySelector('.m-sky').style.backgroundImage = 'url(' + wallpaperUrl + ')';
+
+    (function () {
+      const startupSound = new Audio(startupSoundUrl);
+      let played = false;
+      function playOnce() {
+        if (played) return;
+        played = true;
+        startupSound.play().catch(function () {});
+        document.removeEventListener('pointerdown', playOnce);
+        document.removeEventListener('keydown', playOnce);
+      }
+      startupSound.play().then(function () { played = true; }).catch(function () {
+        document.addEventListener('pointerdown', playOnce);
+        document.addEventListener('keydown', playOnce);
+      });
+    })();
+
+    const iconLayer = document.getElementById('icon-layer');
+    const winLayer = document.getElementById('windows-layer');
+    const taskbarItems = document.getElementById('taskbar-items');
+    const startMenu = document.getElementById('start-menu');
+    const startBtn = document.getElementById('start-btn');
+    const clockEl = document.getElementById('clock');
+
+    const open = {};
+    let zTop = 10;
+
+    function tickClock() {
+      clockEl.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    tickClock();
+    setInterval(tickClock, 20000);
+
+    function glyph(shape) {
+      if (shape === 'folder') return '<div class="glyph-folder"><div class="tab"></div><div class="body"></div><div class="shine"></div></div>';
+      if (shape === 'monitor') return '<div class="glyph-monitor"><div class="case"></div><div class="screen"></div><div class="stand"></div></div>';
+      if (shape === 'globe') return '<div class="glyph-globe"></div>';
+      if (shape === 'ie') return '<div class="glyph-ie"><div class="ring"></div><div class="disc"><span>e</span></div></div>';
+      if (shape === 'reel') return '<div class="glyph-reel"><div class="hub"></div><span class="h1"></span><span class="h2"></span><span class="h3"></span></div>';
+      if (shape === 'chip') return '<div class="glyph-chip"><span class="pin p1"></span><span class="pin p2"></span><span class="pin p3"></span><span class="pin p4"></span><span class="pin p5"></span><span class="pin p6"></span><span class="pin p7"></span><span class="pin p8"></span><div class="core">IC</div></div>';
+      if (shape === 'bin') return '<div class="glyph-bin"><div class="handle"></div><div class="lid"></div><div class="body"></div><div class="arrows">&#9851;</div></div>';
+      return '';
+    }
+
+    const NAV_PLACES = ['reel', 'work', 'about', 'contact', 'publicidad', 'videoclips'];
+    function renderSidebar(currentId) {
+      const tasks = ['Ver como presentación', 'Imprimir esta carpeta', 'Compartir esta carpeta']
+        .map(function (t) { return '<div class="xp-sb-item static"><span class="dot"></span>' + t + '</div>'; }).join('');
+      const places = NAV_PLACES.filter(function (id) { return id !== currentId; })
+        .map(function (id) { return '<div class="xp-sb-item" data-open-app="' + id + '"><span class="dot"></span>' + APPS[id].label + '</div>'; }).join('');
+      return '<div class="xp-sidebar">' +
+        '<div class="xp-sb-title">Tareas de archivo y carpeta</div>' + tasks +
+        '<div class="xp-sb-sep"></div>' +
+        '<div class="xp-sb-title">Otros lugares</div>' + places +
+        '</div>';
+    }
+    function renderCards(items) {
+      return items.map(function (p) {
+        const meta = p.category + (p.year ? ' — ' + p.year : '');
+        return '<a class="xp-card" href="' + p.url + '" target="_blank" rel="noopener">' +
+          '<div class="thumb"><img src="' + p.thumb + '" alt="' + p.title + '" loading="lazy"></div>' +
+          '<div class="title">' + p.title + '</div><div class="meta">' + meta + '</div></a>';
+      }).join('');
+    }
+    function renderGrid(app, id) {
+      return '<div class="xp-grid-wrap">' + renderSidebar(id) + '<div class="xp-grid">' + renderCards(app.items) + '</div></div>';
+    }
+    function renderText(app) {
+      let rows = (app.rows || []).map(function (r) {
+        return '<div class="xp-row"><span class="k">' + r.k + '</span><span class="v">' + r.v + '</span></div>';
+      }).join('');
+      return '<div class="xp-text">' + (app.heading ? '<h2>' + app.heading + '</h2>' : '') +
+        (app.body ? '<pre>' + app.body + '</pre>' : '') + '<div class="xp-rows">' + rows + '</div></div>';
+    }
+    function renderReel(app) {
+      return '<div class="xp-reel-stage"><div class="xp-reel-frame"><iframe src="' + app.embedUrl + '" title="Reel" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>' +
+        '<div class="xp-reel-desc">' + app.body + '</div>';
+    }
+    function renderBody(app, id) {
+      if (app.kind === 'reel') return renderReel(app);
+      if (app.kind === 'grid') return renderGrid(app, id);
+      return renderText(app);
+    }
+    function renderMobileBody(app) {
+      if (app.kind === 'reel') return renderReel(app);
+      if (app.kind === 'grid') return '<div class="xp-grid">' + renderCards(app.items) + '</div>';
+      return renderText(app);
+    }
+
+    function buildTaskbar() {
+      taskbarItems.innerHTML = '';
+      DESKTOP_ORDER.forEach(function (id) {
+        const w = open[id];
+        if (!w) return;
+        const app = APPS[id];
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'task-btn' + (w.focused && !w.min ? ' active' : '');
+        btn.innerHTML = '<span class="dot" style="background:' + app.badge + '"></span><span>' + app.title.split(' — ')[0] + '</span>';
+        btn.addEventListener('click', function () {
+          if (w.min || !w.focused) { openApp(id); } else { minimize(id); }
+        });
+        taskbarItems.appendChild(btn);
+      });
+    }
+
+    function setFocus(id) {
+      Object.keys(open).forEach(function (k) { open[k].focused = (k === id); open[k].el.classList.toggle('active', k === id); });
+      buildTaskbar();
+    }
+
+    function clampWindow(w) {
+      const maxX = window.innerWidth - 120;
+      const maxY = window.innerHeight - 34 - 40;
+      w.x = Math.max(-40, Math.min(w.x, maxX));
+      w.y = Math.max(2, Math.min(w.y, maxY));
+    }
+
+    function positionWindow(w) {
+      w.el.style.left = w.x + 'px';
+      w.el.style.top = w.y + 'px';
+      w.el.style.width = w.width + 'px';
+      w.el.style.zIndex = w.z;
+    }
+
+    function openApp(id) {
+      const app = APPS[id];
+      if (!app) return;
+      if (open[id]) {
+        open[id].min = false;
+        open[id].el.hidden = false;
+        open[id].z = ++zTop;
+        positionWindow(open[id]);
+        setFocus(id);
+        startMenu.hidden = true;
+        return;
+      }
+
+      const n = Object.keys(open).length;
+      const w = Math.min(app.w, window.innerWidth - 24);
+      const x = Math.min(120 + n * 28, Math.max(16, window.innerWidth - w - 24));
+      const y = Math.max(6, Math.min(36 + n * 26, window.innerHeight - 34 - 260));
+
+      const el = document.createElement('div');
+      el.className = 'xp-window';
+      el.innerHTML =
+        '<div class="xp-titlebar" data-role="titlebar">' +
+          '<span class="xp-badge" style="background:' + app.badge + '"></span>' +
+          '<span class="xp-title">' + app.title + '</span>' +
+          '<div class="xp-buttons">' +
+            '<button type="button" data-action="min">_</button>' +
+            '<button type="button" data-action="max">&#9633;</button>' +
+            '<button type="button" class="close" data-action="close">&times;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="xp-menubar">' + app.menu.map(function (m) { return '<span>' + m + '</span>'; }).join('') + '</div>' +
+        '<div class="xp-body" data-role="body">' + renderBody(app, id) + '</div>' +
+        '<div class="xp-statusbar"><span class="s1">' + app.status + '</span><span class="s2">' + app.status2 + '</span></div>';
+
+      winLayer.appendChild(el);
+
+      const state = { el: el, x: x, y: y, width: w, z: ++zTop, min: false, max: false, focused: true };
+      open[id] = state;
+
+      const bodyEl = el.querySelector('[data-role="body"]');
+      bodyEl.style.maxHeight = (app.kind === 'grid' ? Math.min(window.innerHeight - 160, 460) : app.kind === 'reel' ? Math.min(window.innerHeight - 200, 420) : 340) + 'px';
+      bodyEl.querySelectorAll('[data-open-app]').forEach(function (n) {
+        n.addEventListener('click', function () { openApp(n.getAttribute('data-open-app')); });
+      });
+
+      positionWindow(state);
+
+      el.addEventListener('mousedown', function () { if (!state.min) { state.z = ++zTop; positionWindow(state); setFocus(id); } });
+
+      const titlebar = el.querySelector('[data-role="titlebar"]');
+      titlebar.addEventListener('mousedown', function (e) {
+        if (e.target.closest('button')) return;
+        if (state.max) return;
+        const startX = e.clientX, startY = e.clientY, ox = state.x, oy = state.y;
+        function move(ev) {
+          state.x = ox + (ev.clientX - startX);
+          state.y = oy + (ev.clientY - startY);
+          clampWindow(state);
+          positionWindow(state);
         }
-      </div>
-    </section>
+        function up() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); }
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+      });
 
-    <section id="proyectos" class="section wrap">
-      <div class="proyectos-shell">
-        <nav class="filters" aria-label="Filtrar proyectos">
-          {
-            filters.map((f, i) => (
-              <button type="button" class="filter" data-filter={f} aria-pressed={i === 0 ? 'true' : 'false'}>
-                {f}
-              </button>
-            ))
-          }
-          <div class="filters-divider"></div>
-          <span class="count" data-count>{String(projects.length).padStart(2, '0')} proyectos</span>
-        </nav>
+      el.querySelector('[data-action="min"]').addEventListener('click', function (e) { e.stopPropagation(); minimize(id); });
+      el.querySelector('[data-action="max"]').addEventListener('click', function (e) { e.stopPropagation(); toggleMax(id); });
+      el.querySelector('[data-action="close"]').addEventListener('click', function (e) { e.stopPropagation(); closeApp(id); });
 
-        <div class="grid">
-          {
-            projects.map((project, i) => (
-              <ProjectCard
-                num={String(i + 1).padStart(2, '0')}
-                title={project.data.title}
-                category={project.data.tags[0]}
-                date={project.data.date}
-                videoUrl={project.data.videoUrl}
-                featured={project.data.featured}
-              />
-            ))
-          }
-        </div>
-      </div>
-    </section>
+      setFocus(id);
+      buildTaskbar();
+      startMenu.hidden = true;
+    }
 
-    <section id="contacto" class="section wrap contact">
-      <span class="eyebrow">¿Trabajamos juntos?</span>
-      <a class="contact-email" href={`mailto:${profile.email}`}>{profile.email}</a>
-      <div class="contact-links">
-        {profile.phone && <a href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>}
-        {profile.social.linkedin && (
-          <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn ↗
-          </a>
-        )}
-      </div>
-    </section>
+    function minimize(id) {
+      const w = open[id];
+      if (!w) return;
+      w.min = true;
+      w.el.hidden = true;
+      Object.keys(open).forEach(function (k) { open[k].focused = false; });
+      buildTaskbar();
+    }
 
-    <footer class="footer wrap">
-      <span>{profile.role}</span>
-      <span>© {currentYear} {profile.name}</span>
-    </footer>
-  </main>
-</Layout>
+    function toggleMax(id) {
+      const w = open[id];
+      if (!w) return;
+      if (!w.max) {
+        w.prev = { x: w.x, y: w.y, width: w.width };
+        w.max = true;
+        w.x = 6; w.y = 6; w.width = window.innerWidth - 12;
+        w.el.classList.add('maximized');
+        const bodyEl = w.el.querySelector('[data-role="body"]');
+        bodyEl.style.maxHeight = (window.innerHeight - 34 - 100) + 'px';
+      } else {
+        w.max = false;
+        w.x = w.prev.x; w.y = w.prev.y; w.width = w.prev.width;
+        w.el.classList.remove('maximized');
+      }
+      positionWindow(w);
+    }
 
-<script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter');
-  const entries = document.querySelectorAll<HTMLAnchorElement>('.entry');
-  const countEl = document.querySelector('[data-count]');
+    function closeApp(id) {
+      const w = open[id];
+      if (!w) return;
+      w.el.remove();
+      delete open[id];
+      buildTaskbar();
+    }
 
-  function applyFilter(filter: string) {
-    let visible = 0;
-    entries.forEach((entry) => {
-      const category = entry.dataset.category ?? '';
-      const featured = entry.dataset.featured === 'true';
-      const match = filter === 'Todos' || (filter === 'Destacados' ? featured : category === filter);
-      entry.hidden = !match;
-      if (match) visible += 1;
+    DESKTOP_ORDER.forEach(function (id) {
+      const app = APPS[id];
+      const cell = document.createElement('div');
+      cell.className = 'xp-icon';
+      cell.innerHTML = '<div class="xp-icon-glyph">' + glyph(app.shape) + '</div><div class="xp-icon-label">' + app.label + '</div>';
+      cell.addEventListener('click', function () { openApp(id); });
+      iconLayer.appendChild(cell);
     });
-    if (countEl) countEl.textContent = `${String(visible).padStart(2, '0')} proyectos`;
-  }
 
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
-      btn.setAttribute('aria-pressed', 'true');
-      applyFilter(btn.dataset.filter ?? 'Todos');
+    function buildStartMenu() {
+      function item(id, sub) {
+        const app = APPS[id];
+        return '<div class="sm-item" data-open="' + id + '"><b>' + app.label + '</b>' + (sub ? '<div class="sm-sub">' + sub + '</div>' : '') + '</div>';
+      }
+      startMenu.innerHTML =
+        '<div class="sm-head"><div class="sm-avatar"></div><span class="sm-name">' + APPS.about.label + '</span></div>' +
+        '<div class="sm-cols">' +
+          '<div class="sm-left">' + START_LEFT.map(function (id) { return item(id); }).join('') + '</div>' +
+          '<div class="sm-right">' + START_RIGHT.map(function (id) { return item(id); }).join('') + '</div>' +
+        '</div>' +
+        '<div class="sm-foot"><span data-close-all>Log Off</span><span data-close-all>Turn Off Computer</span></div>';
+
+      startMenu.querySelectorAll('[data-open]').forEach(function (n) {
+        n.addEventListener('click', function () { openApp(n.getAttribute('data-open')); });
+      });
+      startMenu.querySelectorAll('[data-close-all]').forEach(function (n) {
+        n.addEventListener('click', function () {
+          Object.keys(open).forEach(closeApp);
+          startMenu.hidden = true;
+        });
+      });
+    }
+    buildStartMenu();
+
+    startBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      startMenu.hidden = !startMenu.hidden;
+      startBtn.classList.toggle('open', !startMenu.hidden);
     });
-  });
-</script>
+    document.addEventListener('mousedown', function (e) {
+      if (!startMenu.hidden && !startMenu.contains(e.target) && e.target !== startBtn && !startBtn.contains(e.target)) {
+        startMenu.hidden = true;
+        startBtn.classList.remove('open');
+      }
+    });
 
-<style>
-  .hero {
-    position: relative;
-    min-height: 92vh;
-    display: flex;
-    align-items: center;
-  }
+    window.addEventListener('resize', function () {
+      Object.keys(open).forEach(function (id) { clampWindow(open[id]); positionWindow(open[id]); });
+    });
 
-  .hero-inner {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 28px;
-    padding-top: 80px;
-  }
+    openApp('work');
 
-  .hero-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 24px;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
+    const desktopEl = document.getElementById('desktop');
+    const mobileRoot = document.getElementById('mobile-root');
+    const mHome = document.getElementById('m-home');
+    const mView = document.getElementById('m-view');
+    const mIcons = document.getElementById('m-icons');
+    const mViewTitle = document.getElementById('m-view-title');
+    const mViewBody = document.getElementById('m-view-body');
+    const mBack = document.getElementById('m-back');
+    let mobileBuilt = false;
 
-  .badge {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-muted);
-  }
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--text);
-    display: inline-block;
-  }
-
-  .hero-role {
-    color: var(--text-faint);
-    display: none;
-  }
-
-  @media (min-width: 640px) {
-    .hero-role {
-      display: inline;
+    function buildMobileIcons() {
+      mIcons.innerHTML = '';
+      DESKTOP_ORDER.forEach(function (id) {
+        const app = APPS[id];
+        const cell = document.createElement('div');
+        cell.className = 'm-icon';
+        cell.innerHTML = '<div class="xp-icon-glyph">' + glyph(app.shape) + '</div><div class="xp-icon-label">' + app.label + '</div>';
+        cell.addEventListener('click', function () { openMobileApp(id); });
+        mIcons.appendChild(cell);
+      });
+      mobileBuilt = true;
     }
-  }
 
-  .headline {
-    margin: clamp(24px, 6vw, 56px) 0 0;
-    font-family: var(--font-serif);
-    font-weight: 300;
-    font-size: clamp(2.6rem, 8.5vw, 7.5rem);
-    line-height: 0.95;
-    letter-spacing: clamp(0.02em, 1vw, 0.08em);
-    text-indent: clamp(0.02em, 1vw, 0.08em);
-    color: var(--text);
-  }
-
-  .sub-headline {
-    margin: 0;
-    max-width: 560px;
-    font-size: 0.9rem;
-    line-height: 1.8;
-    color: var(--text-muted);
-  }
-
-  .cta-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    margin-top: 12px;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    padding: 12px 24px;
-    border-radius: 999px;
-    transition: opacity 0.15s ease, border-color 0.15s ease;
-  }
-
-  .btn-primary {
-    background: var(--text);
-    color: #000;
-  }
-
-  .btn-primary:hover {
-    opacity: 0.85;
-  }
-
-  .btn-secondary {
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    color: var(--text);
-    border-color: var(--text-muted);
-  }
-
-  .section {
-    padding: 64px 24px 96px;
-    border-top: 1px solid var(--border);
-  }
-
-  .reel {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .reel-sub {
-    margin: 0 0 12px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-
-  .reel-frame {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  .reel-frame iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-
-  .reel-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-  }
-
-  .proyectos-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-  }
-
-  @media (min-width: 900px) {
-    .proyectos-shell {
-      grid-template-columns: 168px minmax(0, 1fr);
+    function openMobileApp(id) {
+      const app = APPS[id];
+      mViewTitle.textContent = app.label;
+      mViewBody.innerHTML = renderMobileBody(app);
+      mView.hidden = false;
+      mHome.hidden = true;
     }
-  }
+    mBack.addEventListener('click', function () {
+      mView.hidden = true;
+      mHome.hidden = false;
+    });
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 20px;
-    align-items: center;
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  @media (min-width: 900px) {
-    .filters {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
+    const mq = window.matchMedia('(max-width: 820px)');
+    function applyMode(isMobile) {
+      desktopEl.hidden = isMobile;
+      mobileRoot.hidden = !isMobile;
+      if (isMobile && !mobileBuilt) buildMobileIcons();
     }
-  }
-
-  .filter {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    letter-spacing: inherit;
-    text-transform: inherit;
-    color: var(--text-faint);
-    cursor: pointer;
-    transition: color 0.15s ease;
-  }
-
-  .filter:hover {
-    color: var(--text-muted);
-  }
-
-  .filter[aria-pressed='true'] {
-    color: var(--text);
-    font-weight: 500;
-  }
-
-  .filters-divider {
-    display: none;
-  }
-
-  @media (min-width: 900px) {
-    .filters-divider {
-      display: block;
-      width: 100%;
-      height: 1px;
-      background: var(--border);
-      margin: 2px 0;
-    }
-  }
-
-  .count {
-    color: var(--text-faint);
-    font-size: 10px;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    column-gap: clamp(20px, 2.6vw, 40px);
-    row-gap: clamp(44px, 5vw, 72px);
-  }
-
-  .contact {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    padding-bottom: 120px;
-  }
-
-  .eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-  }
-
-  .contact-email {
-    font-family: var(--font-serif);
-    font-weight: 300;
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    color: var(--text);
-    text-decoration: none;
-    line-height: 1.1;
-    word-break: break-word;
-  }
-
-  .contact-links {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .contact-links a {
-    color: var(--text-muted);
-    text-decoration: none;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 3px;
-  }
-
-  .footer {
-    padding: 28px 24px 48px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    color: var(--text-faint);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-</style>
+    applyMode(mq.matches);
+    mq.addEventListener('change', function (e) { applyMode(e.matches); });
+  })();
+  </script>
+</body>
+</html>

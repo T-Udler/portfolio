@@ -1,0 +1,435 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { profile } from '../../data/profile';
+import { getYouTubeId } from '../../utils/youtube';
+
+const reelId = profile.reelUrl ? getYouTubeId(profile.reelUrl) : null;
+
+const allProjects = await getCollection('projects');
+const projects = allProjects.sort((a, b) => {
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  const dateA = a.data.date?.getTime() ?? 0;
+  const dateB = b.data.date?.getTime() ?? 0;
+  return dateB - dateA;
+});
+
+const categories = [...new Set(projects.map((p) => p.data.tags[0]).filter(Boolean))];
+const filters = ['Todos', 'Destacados', ...categories];
+const currentYear = new Date().getFullYear();
+---
+
+<Layout>
+  <Header />
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div class="hero-top">
+          <span class="badge">
+            <span class="dot"></span>
+            Disponible para colaboraciones freelance
+          </span>
+          <span class="hero-role">{profile.role}</span>
+        </div>
+
+        <h1 class="headline">{profile.name}</h1>
+
+        <p class="sub-headline">{profile.bio}</p>
+
+        <div class="cta-row">
+          <a class="btn-primary" href="#proyectos">Ver proyectos</a>
+          <a class="btn-secondary" href="#contacto">Contacto</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="reel" class="section wrap reel">
+      <span class="eyebrow">Demo Reel</span>
+      <p class="reel-sub">Un resumen de piezas y proyectos recientes.</p>
+      <div class="reel-frame">
+        {
+          reelId ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${reelId}`}
+              title="Demo reel"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          ) : (
+            <div class="reel-placeholder">
+              <span>Reel disponible próximamente</span>
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section id="proyectos" class="section wrap">
+      <div class="proyectos-shell">
+        <nav class="filters" aria-label="Filtrar proyectos">
+          {
+            filters.map((f, i) => (
+              <button type="button" class="filter" data-filter={f} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {f}
+              </button>
+            ))
+          }
+          <div class="filters-divider"></div>
+          <span class="count" data-count>{String(projects.length).padStart(2, '0')} proyectos</span>
+        </nav>
+
+        <div class="grid">
+          {
+            projects.map((project, i) => (
+              <ProjectCard
+                num={String(i + 1).padStart(2, '0')}
+                title={project.data.title}
+                category={project.data.tags[0]}
+                date={project.data.date}
+                videoUrl={project.data.videoUrl}
+                featured={project.data.featured}
+              />
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="contacto" class="section wrap contact">
+      <span class="eyebrow">¿Trabajamos juntos?</span>
+      <a class="contact-email" href={`mailto:${profile.email}`}>{profile.email}</a>
+      <div class="contact-links">
+        {profile.phone && <a href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>}
+        {profile.social.linkedin && (
+          <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer">
+            LinkedIn ↗
+          </a>
+        )}
+      </div>
+    </section>
+
+    <footer class="footer wrap">
+      <span>{profile.role}</span>
+      <span>© {currentYear} {profile.name}</span>
+    </footer>
+  </main>
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter');
+  const entries = document.querySelectorAll<HTMLAnchorElement>('.entry');
+  const countEl = document.querySelector('[data-count]');
+
+  function applyFilter(filter: string) {
+    let visible = 0;
+    entries.forEach((entry) => {
+      const category = entry.dataset.category ?? '';
+      const featured = entry.dataset.featured === 'true';
+      const match = filter === 'Todos' || (filter === 'Destacados' ? featured : category === filter);
+      entry.hidden = !match;
+      if (match) visible += 1;
+    });
+    if (countEl) countEl.textContent = `${String(visible).padStart(2, '0')} proyectos`;
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      applyFilter(btn.dataset.filter ?? 'Todos');
+    });
+  });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 28px;
+    padding-top: 80px;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 24px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text);
+    display: inline-block;
+  }
+
+  .hero-role {
+    color: var(--text-faint);
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .hero-role {
+      display: inline;
+    }
+  }
+
+  .headline {
+    margin: clamp(24px, 6vw, 56px) 0 0;
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: clamp(2.6rem, 8.5vw, 7.5rem);
+    line-height: 0.95;
+    letter-spacing: clamp(0.02em, 1vw, 0.08em);
+    text-indent: clamp(0.02em, 1vw, 0.08em);
+    color: var(--text);
+  }
+
+  .sub-headline {
+    margin: 0;
+    max-width: 560px;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+
+  .cta-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 999px;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: #000;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.85;
+  }
+
+  .btn-secondary {
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+
+  .section {
+    padding: 64px 24px 96px;
+    border-top: 1px solid var(--border);
+  }
+
+  .reel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .reel-sub {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .reel-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .reel-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .reel-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .proyectos-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  @media (min-width: 900px) {
+    .proyectos-shell {
+      grid-template-columns: 168px minmax(0, 1fr);
+    }
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 900px) {
+    .filters {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+
+  .filter {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .filter:hover {
+    color: var(--text-muted);
+  }
+
+  .filter[aria-pressed='true'] {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .filters-divider {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .filters-divider {
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 2px 0;
+    }
+  }
+
+  .count {
+    color: var(--text-faint);
+    font-size: 10px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    column-gap: clamp(20px, 2.6vw, 40px);
+    row-gap: clamp(44px, 5vw, 72px);
+  }
+
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-bottom: 120px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .contact-email {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: var(--text);
+    text-decoration: none;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .contact-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+  }
+
+  .footer {
+    padding: 28px 24px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-faint);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+</style>
