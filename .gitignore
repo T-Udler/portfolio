@@ -22,3 +22,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# editor workspace settings (not needed to run the site)
+.vscode/
+
+# internal / AI-assistant notes (not needed to run the site)
+CLAUDE.md
+AGENTS.md
