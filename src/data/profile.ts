@@ -6,7 +6,7 @@ export const profile = {
   phone: '+54 9 11 2256-2205',
   location: 'Argentina',
   social: {
-    linkedin: 'http://www.linkedin.com/in/tomas-udler-416319295',
+    linkedin: 'https://www.linkedin.com/in/tomasudler',
   },
   reelUrl: 'https://youtu.be/uwNnZl9rVx0',
 };
